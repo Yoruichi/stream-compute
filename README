@@ -4,17 +4,7 @@ http://wiki.tenddata.com/pages/viewpage.action?pageId=7143677
 
 一、QuickStart
 
-1.pom文件引用坐标
-
-<dependency>
-
-<groupId>com.talkingdata.olap.counter</groupId>
-
-<artifactId>counter</artifactId>
-
-<version>1.0.5</version>
-
-</dependency>
+1.
 
 2.三大基础类
 
