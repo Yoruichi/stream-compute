@@ -25,27 +25,12 @@ public class EmitItem implements Serializable {
 		return message[index];
 	}
 
-	public Tuple getMessage(String field) {
-		if (messages == null)
-			return null;
-		return messages.get(field);
-	}
-
 	public void setMessage(Serializable... message) {
 		this.message = message;
 	}
 
-	public Map<String, Tuple> getMessages() {
-		return messages;
-	}
-
-	public void setMessages(Map<String, Tuple> messages) {
-		this.messages = messages;
-	}
-
 	private long xid;
 	private Serializable[] message;
-	private Map<String, Tuple> messages = new HashMap<String, Tuple>();
 
 	public EmitItem() {
 	}
@@ -53,11 +38,6 @@ public class EmitItem implements Serializable {
 	public EmitItem(long xid, Serializable[] message) {
 		this.message = message;
 		this.xid = xid;
-	}
-
-	public EmitItem(long xid, String field, Serializable[] messages) {
-		this.xid = xid;
-		this.messages.put(field, new Tuple(field, messages));
 	}
 
 }
