@@ -9,7 +9,7 @@ import org.iq80.leveldb.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class LevelDBHandler {
+public class LevelDBHandler extends DBHandler {
 
 	public static Options options = new Options();
 
@@ -27,7 +27,8 @@ public class LevelDBHandler {
 		this.dbName = dbName;
 
 	}
-
+	
+	@Override
 	public void open() {
 		try {
 			db = JniDBFactory.factory.open(new File(dbName), options);
@@ -38,6 +39,7 @@ public class LevelDBHandler {
 		}
 	}
 
+	@Override
 	public void close() {
 		if (db != null)
 			try {
@@ -58,10 +60,12 @@ public class LevelDBHandler {
 		}
 	}
 
+	@Override
 	public String getStringValue(String key) throws Exception {
 		return JniDBFactory.asString(getByteWiseValue(key));
 	}
-
+	
+	@Override
 	public void setKey(String key, byte[] value) {
 		synchronized (options) {
 			try {
@@ -74,10 +78,12 @@ public class LevelDBHandler {
 		}
 	}
 
+	@Override
 	public void setKey(String key, String value) {
 		setKey(key, JniDBFactory.bytes(value));
 	}
 
+	@Override
 	public void delKey(String key) {
 		synchronized (options) {
 			try {

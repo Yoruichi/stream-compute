@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import td.olap.computer.consist.XidManager;
 import td.olap.computer.data.EmitItem;
+import td.olap.computer.persist.DBHandler;
 import td.olap.computer.persist.LevelDBHandler;
 import td.olap.computer.util.Util;
 
@@ -23,11 +24,11 @@ import td.olap.computer.util.Util;
  *         Spout will be running as a thread.You should rewrite the execute
  *         method to do what you want.
  */
-public abstract class Spout implements Runnable,Cloneable {
+public abstract class Spout implements Runnable, Cloneable {
 
 	protected final static Logger logger = LoggerFactory.getLogger(Spout.class);
 
-	private LevelDBHandler dbHandler;
+	private DBHandler dbHandler;
 
 	private BlockingQueue<EmitItem> sendMessageQueue;
 	private AtomicBoolean finish = new AtomicBoolean(false);
@@ -69,14 +70,11 @@ public abstract class Spout implements Runnable,Cloneable {
 
 	public void persist(Serializable message) {
 		try {
-			getDbHandler().setKey(currentXid + ":" + packageId,
-					Util.ObjectToByte(message));
+			getDbHandler().setKey(currentXid + ":" + packageId, Util.ObjectToByte(message));
 			getDbHandler().setKey("" + currentXid, "" + packageId);
 			packageId++;
 		} catch (Exception e) {
-			logger.error("Persist messages from topology " + topologyName
-					+ " failed. xid " + currentXid + "_" + packageId
-					+ " messages " + message + ".", e);
+			logger.error("Persist messages from topology " + topologyName + " failed. xid " + currentXid + "_" + packageId + " messages " + message + ".", e);
 			e.printStackTrace();
 		}
 	}
@@ -95,17 +93,12 @@ public abstract class Spout implements Runnable,Cloneable {
 		}
 		EmitItem item = new EmitItem(currentXid, messages);
 		try {
-			logger.debug(Thread.currentThread().getName()
-					+ " emit messages with index " + currentXid
-					+ " .Maybe blocking.");
+			logger.debug(Thread.currentThread().getName() + " emit messages with index " + currentXid + " .Maybe blocking.");
 			getSendMessageQueue().put(item);
 			setCurrentXid(XidManager.addAndGet(dbHandler, topologyName, 1));
 			setPackageId(0);
 		} catch (Exception e) {
-			logger.error(
-					"Persist messages from topology " + topologyName
-							+ " failed. xid " + currentXid + " messages "
-							+ Arrays.toString(messages) + ".", e);
+			logger.error("Persist messages from topology " + topologyName + " failed. xid " + currentXid + " messages " + Arrays.toString(messages) + ".", e);
 			e.printStackTrace();
 		}
 	}
@@ -169,11 +162,11 @@ public abstract class Spout implements Runnable,Cloneable {
 		this.packageId = packageId;
 	}
 
-	public LevelDBHandler getDbHandler() {
+	public DBHandler getDbHandler() {
 		return dbHandler;
 	}
 
-	public void setDbHandler(LevelDBHandler dbHandler) {
+	public void setDbHandler(DBHandler dbHandler) {
 		this.dbHandler = dbHandler;
 	}
 

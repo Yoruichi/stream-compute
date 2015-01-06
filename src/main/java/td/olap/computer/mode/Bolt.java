@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import td.olap.computer.data.EmitItem;
+import td.olap.computer.persist.DBHandler;
 import td.olap.computer.persist.LevelDBHandler;
 
 /**
@@ -33,7 +34,7 @@ public abstract class Bolt implements Runnable, Cloneable {
 	private AtomicBoolean finish = new AtomicBoolean(false);
 	private int num;
 	private String topologyName;
-	private LevelDBHandler dbHandler;
+	private DBHandler dbHandler;
 
 	public Bolt() {
 
@@ -183,11 +184,11 @@ public abstract class Bolt implements Runnable, Cloneable {
 		this.topologyName = topologyName;
 	}
 
-	public LevelDBHandler getDbHandler() {
+	public DBHandler getDbHandler() {
 		return dbHandler;
 	}
 
-	public void setDbHandler(LevelDBHandler dbHandler) {
+	public void setDbHandler(DBHandler dbHandler) {
 		this.dbHandler = dbHandler;
 	}
 

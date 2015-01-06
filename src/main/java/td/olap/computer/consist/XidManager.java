@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import td.olap.computer.persist.DBHandler;
 import td.olap.computer.persist.LevelDBHandler;
 
 public class XidManager {
@@ -15,7 +16,7 @@ public class XidManager {
 
 	private static Logger logger = LoggerFactory.getLogger(XidManager.class);
 
-	public static void registTopology(LevelDBHandler dbHandler, String name) {
+	public static void registTopology(DBHandler dbHandler, String name) {
 		try {
 			String sXid = dbHandler.getStringValue("xid");
 			long current = sXid == null ? 0 : Long.valueOf(sXid);
@@ -27,7 +28,7 @@ public class XidManager {
 
 	}
 
-	public static long addAndGet(LevelDBHandler dbHandler, String topoName,
+	public static long addAndGet(DBHandler dbHandler, String topoName,
 			long delta) {
 		AtomicLong l = xidMap.get(topoName);
 		if (l == null) {

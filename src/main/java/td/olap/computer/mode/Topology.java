@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import td.olap.computer.consist.XidManager;
 import td.olap.computer.data.EmitItem;
+import td.olap.computer.persist.DBHandler;
 import td.olap.computer.persist.LevelDBHandler;
 import td.olap.computer.util.Util;
 
@@ -52,20 +53,30 @@ public class Topology {
 
 	public AtomicBoolean running = new AtomicBoolean(false);
 
-	public LevelDBHandler dbHandler;
+	private DBHandler dbHandler;
+
+	public Topology(String name, DBHandler db) {
+		this.name = name;
+		this.dbHandler = db;
+		init();
+	}
 
 	public Topology(String name) {
 		this.name = name;
-		messageQueueList = new ArrayList<BlockingQueue<EmitItem>>();
-		boltGroupList = new ArrayList<Bolt[]>();
-		boltServiceList = new ArrayList<ExecutorService>();
-		dbHandler = new LevelDBHandler(name);
-		dbHandler.open();
-		XidManager.registTopology(dbHandler, name);
+		setDbHandler(new LevelDBHandler(name));
+		init();
 	}
 
 	public Topology() {
 		this("default_" + System.currentTimeMillis());
+	}
+
+	public void init() {
+		messageQueueList = new ArrayList<BlockingQueue<EmitItem>>();
+		boltGroupList = new ArrayList<Bolt[]>();
+		boltServiceList = new ArrayList<ExecutorService>();
+		getDbHandler().open();
+		XidManager.registTopology(getDbHandler(), name);
 	}
 
 	/**
@@ -88,11 +99,11 @@ public class Topology {
 		spoutGroup[0] = spout;
 		for (int i = 1; i < spoutNum; i++) {
 			spoutGroup[i] = spout.clone();
-			spoutGroup[i].setDbHandler(dbHandler);
-			spoutGroup[i].setCurrentXid(XidManager.addAndGet(dbHandler, name, 1));
+			spoutGroup[i].setDbHandler(getDbHandler());
+			spoutGroup[i].setCurrentXid(XidManager.addAndGet(getDbHandler(), name, 1));
 		}
-		spout.setDbHandler(dbHandler);
-		spout.setCurrentXid(XidManager.addAndGet(dbHandler, name, 1));
+		spout.setDbHandler(getDbHandler());
+		spout.setCurrentXid(XidManager.addAndGet(getDbHandler(), name, 1));
 
 		return this;
 	}
@@ -120,9 +131,9 @@ public class Topology {
 		boltGroup[0] = bolt;
 		for (int i = 1; i < boltNum; i++) {
 			boltGroup[i] = bolt.clone();
-			boltGroup[i].setDbHandler(dbHandler);
+			boltGroup[i].setDbHandler(getDbHandler());
 		}
-		bolt.setDbHandler(dbHandler);
+		bolt.setDbHandler(getDbHandler());
 		boltGroupList.add(boltGroup);
 		return this;
 	}
@@ -150,17 +161,17 @@ public class Topology {
 	 */
 	public void reload() {
 		try {
-			String sLastSucc = dbHandler.getStringValue("lastsucc");
+			String sLastSucc = getDbHandler().getStringValue("lastsucc");
 			long lastSucc = sLastSucc == null ? -1 : Long.valueOf(sLastSucc);
 			logger.info("Last success xid is " + lastSucc + ", now ready to load un-finish task.");
 			long reloadSize = XidManager.get(name) - spoutGroup.length;
 			for (long i = (lastSucc + 1); i <= reloadSize; i++) {
-				String sPackageId = dbHandler.getStringValue("" + i);
+				String sPackageId = getDbHandler().getStringValue("" + i);
 				int packageId = sPackageId == null ? -1 : Integer.valueOf(sPackageId);
 				logger.info("Reload the Xid " + i + " package 0 to " + packageId + ".");
 				List<Serializable> l = new ArrayList<Serializable>();
 				for (int j = 0; j <= packageId; j++) {
-					Serializable s = Util.ByteToObject(dbHandler.getByteWiseValue(i + ":" + j));
+					Serializable s = Util.ByteToObject(getDbHandler().getByteWiseValue(i + ":" + j));
 					if (s != null)
 						l.add(s);
 				}
@@ -276,9 +287,7 @@ public class Topology {
 			return false;
 		for (int i = 0; i < boltGroupList.get(index).length; i++) {
 			if (!boltGroupList.get(index)[i].isFinish()) {
-				logger.debug("bolt group index [" + index + "]:[" + i + "] is not finish and prevFinish:["
-					+ boltGroupList.get(index)[i].isPrevFinish() + "] and read message queue is empty:["
-					+ boltGroupList.get(index)[i].getReadMessageQueue().isEmpty() + "]");
+				logger.debug("bolt group index [" + index + "]:[" + i + "] is not finish and prevFinish:[" + boltGroupList.get(index)[i].isPrevFinish() + "] and read message queue is empty:[" + boltGroupList.get(index)[i].getReadMessageQueue().isEmpty() + "]");
 				return false;
 			}
 		}
@@ -353,7 +362,7 @@ public class Topology {
 				boltGroupList.get(i)[j].shutdown();
 		for (int i = 0; i < boltServiceList.size(); i++)
 			boltServiceList.get(i).shutdown();
-		dbHandler.close();
+		getDbHandler().close();
 	}
 
 	public long getWaitTime() {
@@ -370,6 +379,14 @@ public class Topology {
 
 	public void setMaxMissing(int maxMissing) {
 		this.maxMissing = maxMissing;
+	}
+
+	public DBHandler getDbHandler() {
+		return dbHandler;
+	}
+
+	public void setDbHandler(DBHandler dbHandler) {
+		this.dbHandler = dbHandler;
 	}
 
 }
