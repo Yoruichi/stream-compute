@@ -18,14 +18,26 @@ public class XidManager {
 	public static void registTopology(DBHandler dbHandler, String name) {
 		try {
 			String sXid = dbHandler.getStringValue(name + ":xid");
-			long current = sXid == null ? 0 : Long.valueOf(sXid);
+			long current = sXid == null ? 0 : Long.valueOf(sXid) - getSpoutSize(dbHandler, name) + 1;
 			xidMap.put(name, new AtomicLong(current));
 			dbHandler.setKey(name + ":xid", "" + current);
 		} catch (Exception e) {
 			logger.error("Regist topology " + name + " failed.", e);
 			e.printStackTrace();
 		}
+	}
 
+	public static void setSpoutSize(DBHandler dbHandler, String name, int size) {
+		dbHandler.setKey(name + ":spout:size", "" + size);
+	}
+
+	public static int getSpoutSize(DBHandler dbHandler, String name) {
+		String sLastSpoutSize = null;
+		try {
+			sLastSpoutSize = dbHandler.getStringValue(name + ":spout:size");
+		} catch (Exception e) {
+		}
+		return sLastSpoutSize == null ? 1 : Integer.valueOf(sLastSpoutSize);
 	}
 
 	public static long getAndAdd(String topoName, long delta) {

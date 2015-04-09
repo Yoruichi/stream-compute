@@ -105,7 +105,7 @@ public class Topology {
 		}
 		spoutGroup[0].setDbHandler(getDbHandler());
 		spoutGroup[0].setCurrentXid(XidManager.getAndAdd(name, 1));
-		dbHandler.setKey(name + ":spout:size", "" + spoutNum);
+		XidManager.setSpoutSize(dbHandler, name, spoutNum);
 		return this;
 	}
 
@@ -165,9 +165,7 @@ public class Topology {
 			String sLastSucc = getDbHandler().getStringValue(name + ":lastsucc");
 			long lastSucc = sLastSucc == null ? -1 : Long.valueOf(sLastSucc);
 			logger.info("Last success xid is " + lastSucc + ", now ready to load un-finish task.");
-			String sLastSpoutSize = dbHandler.getStringValue(name + ":spout:size");
-			int lastSpoutSize = sLastSpoutSize == null ? 0 : Integer.valueOf(sLastSpoutSize);
-			long reloadSize = XidManager.getCurrent(dbHandler, name) - lastSpoutSize + 1;
+			long reloadSize = XidManager.getCurrent(dbHandler, name);
 			if (reloadSize > 0) {
 				for (long i = (lastSucc + 1); i < reloadSize; i++) {
 					String sPackageId = getDbHandler().getStringValue(name + ":" + i);

@@ -105,8 +105,8 @@ public abstract class Spout implements Runnable, Cloneable {
 		try {
 			logger.debug(Thread.currentThread().getName() + " emit messages with index " + currentXid
 					+ " .Maybe blocking.");
-			getSendMessageQueue().put(item);
 			setCurrentXid(XidManager.getAndAddAndSave(dbHandler, topologyName, 1));
+			getSendMessageQueue().put(item);
 			setPackageId(0);
 		} catch (Exception e) {
 			logger.error("Persist messages from topology " + topologyName + " failed. xid " + currentXid + " messages "
