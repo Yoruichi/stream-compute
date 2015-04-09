@@ -165,7 +165,7 @@ public class Topology {
 			String sLastSucc = getDbHandler().getStringValue(name + ":lastsucc");
 			long lastSucc = sLastSucc == null ? -1 : Long.valueOf(sLastSucc);
 			logger.info("Last success xid is " + lastSucc + ", now ready to load un-finish task.");
-			long reloadSize = XidManager.getCurrent(dbHandler, name);
+			long reloadSize = XidManager.getCurrent(dbHandler, name) - spoutGroup.length + 1;
 			if (reloadSize > 0) {
 				for (long i = (lastSucc + 1); i < reloadSize; i++) {
 					String sPackageId = getDbHandler().getStringValue(name + ":" + i);

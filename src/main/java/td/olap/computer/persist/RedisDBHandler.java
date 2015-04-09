@@ -14,7 +14,6 @@ public class RedisDBHandler extends DBHandler {
 	private static Logger logger = LoggerFactory.getLogger(RedisDBHandler.class);
 
 	private JedisPool pool;
-	private Jedis redis;
 	private JedisPoolConfig conf;
 	private String host;
 	private int port;
@@ -57,7 +56,7 @@ public class RedisDBHandler extends DBHandler {
 
 	@Override
 	public void setKey(String key, String value) {
-		redis = pool.getResource();
+		Jedis redis = pool.getResource();
 		try {
 			redis.set(key, value);
 		} catch (JedisException je) {
@@ -77,7 +76,7 @@ public class RedisDBHandler extends DBHandler {
 
 	@Override
 	public void setKey(String key, byte[] value) {
-		redis = pool.getResource();
+		Jedis redis = pool.getResource();
 		try {
 			redis.set(SafeEncoder.encode(key), value);
 		} catch (JedisException je) {
@@ -97,7 +96,7 @@ public class RedisDBHandler extends DBHandler {
 
 	@Override
 	public void delKey(String key) {
-		redis = pool.getResource();
+		Jedis redis = pool.getResource();
 		try {
 			redis.del(key);
 		} catch (JedisException je) {
@@ -118,7 +117,7 @@ public class RedisDBHandler extends DBHandler {
 	@Override
 	public String getStringValue(String key) throws Exception {
 		String v = null;
-		redis = pool.getResource();
+		Jedis redis = pool.getResource();
 		try {
 			v = redis.get(key);
 		} catch (JedisException je) {
@@ -140,7 +139,7 @@ public class RedisDBHandler extends DBHandler {
 	@Override
 	public byte[] getByteWiseValue(String key) throws Exception {
 		byte[] b = null;
-		redis = pool.getResource();
+		Jedis redis = pool.getResource();
 		try {
 			b = redis.get(SafeEncoder.encode(key));
 		} catch (JedisException je) {
