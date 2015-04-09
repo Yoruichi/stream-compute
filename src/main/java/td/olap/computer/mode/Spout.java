@@ -46,6 +46,15 @@ public abstract class Spout implements Runnable, Cloneable {
 		return this;
 	}
 
+	public Spout initializedForTest(DBHandler dbHandler) {
+		sendMessageQueue = new LinkedBlockingQueue<EmitItem>();
+		topologyName = "LocalTest";
+		setDbHandler(dbHandler);
+		dbHandler.open();
+		XidManager.registTopology(dbHandler, topologyName);
+		return this;
+	}
+
 	/**
 	 * Initialized something you need.This method will be called once when
 	 * topology start.
@@ -70,11 +79,12 @@ public abstract class Spout implements Runnable, Cloneable {
 
 	public void persist(Serializable message) {
 		try {
-			getDbHandler().setKey(currentXid + ":" + packageId, Util.ObjectToByte(message));
-			getDbHandler().setKey("" + currentXid, "" + packageId);
+			getDbHandler().setKey(topologyName + ":" + currentXid + ":" + packageId, Util.ObjectToByte(message));
+			getDbHandler().setKey(topologyName + ":" + currentXid, "" + packageId);
 			packageId++;
 		} catch (Exception e) {
-			logger.error("Persist messages from topology " + topologyName + " failed. xid " + currentXid + "_" + packageId + " messages " + message + ".", e);
+			logger.error("Persist messages from topology " + topologyName + " failed. xid " + currentXid + "_"
+					+ packageId + " messages " + message + ".", e);
 			e.printStackTrace();
 		}
 	}
@@ -93,12 +103,14 @@ public abstract class Spout implements Runnable, Cloneable {
 		}
 		EmitItem item = new EmitItem(currentXid, messages);
 		try {
-			logger.debug(Thread.currentThread().getName() + " emit messages with index " + currentXid + " .Maybe blocking.");
+			logger.debug(Thread.currentThread().getName() + " emit messages with index " + currentXid
+					+ " .Maybe blocking.");
 			getSendMessageQueue().put(item);
-			setCurrentXid(XidManager.addAndGet(dbHandler, topologyName, 1));
+			setCurrentXid(XidManager.getAndAddAndSave(dbHandler, topologyName, 1));
 			setPackageId(0);
 		} catch (Exception e) {
-			logger.error("Persist messages from topology " + topologyName + " failed. xid " + currentXid + " messages " + Arrays.toString(messages) + ".", e);
+			logger.error("Persist messages from topology " + topologyName + " failed. xid " + currentXid + " messages "
+					+ Arrays.toString(messages) + ".", e);
 			e.printStackTrace();
 		}
 	}

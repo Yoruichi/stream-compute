@@ -97,13 +97,14 @@ public class Topology {
 		spoutGroup = new Spout[spoutNum];
 
 		spoutGroup[0] = spout;
+
 		for (int i = 1; i < spoutNum; i++) {
 			spoutGroup[i] = spout.clone();
 			spoutGroup[i].setDbHandler(getDbHandler());
-			spoutGroup[i].setCurrentXid(XidManager.addAndGet(getDbHandler(), name, 1));
+			spoutGroup[i].setCurrentXid(XidManager.getAndAdd(name, 1));
 		}
-		spout.setDbHandler(getDbHandler());
-		spout.setCurrentXid(XidManager.addAndGet(getDbHandler(), name, 1));
+		spoutGroup[0].setDbHandler(getDbHandler());
+		spoutGroup[0].setCurrentXid(XidManager.getAndAdd(name, 1));
 
 		return this;
 	}
@@ -161,22 +162,24 @@ public class Topology {
 	 */
 	public void reload() {
 		try {
-			String sLastSucc = getDbHandler().getStringValue("lastsucc");
+			String sLastSucc = getDbHandler().getStringValue(name + ":lastsucc");
 			long lastSucc = sLastSucc == null ? -1 : Long.valueOf(sLastSucc);
 			logger.info("Last success xid is " + lastSucc + ", now ready to load un-finish task.");
-			long reloadSize = XidManager.get(name) - spoutGroup.length;
-			for (long i = (lastSucc + 1); i <= reloadSize; i++) {
-				String sPackageId = getDbHandler().getStringValue("" + i);
-				int packageId = sPackageId == null ? -1 : Integer.valueOf(sPackageId);
-				logger.info("Reload the Xid " + i + " package 0 to " + packageId + ".");
-				List<Serializable> l = new ArrayList<Serializable>();
-				for (int j = 0; j <= packageId; j++) {
-					Serializable s = Util.ByteToObject(getDbHandler().getByteWiseValue(i + ":" + j));
-					if (s != null)
-						l.add(s);
+			long reloadSize = XidManager.getCurrent(dbHandler, name);
+			if (reloadSize > 0) {
+				for (long i = (lastSucc + 1); i < reloadSize; i++) {
+					String sPackageId = getDbHandler().getStringValue(name + ":" + i);
+					int packageId = sPackageId == null ? -1 : Integer.valueOf(sPackageId);
+					logger.info("Reload the Xid " + i + " package 0 to " + packageId + ".");
+					List<Serializable> l = new ArrayList<Serializable>();
+					for (int j = 0; j <= packageId; j++) {
+						Serializable s = Util.ByteToObject(getDbHandler().getByteWiseValue(name + ":" + i + ":" + j));
+						if (s != null)
+							l.add(s);
+					}
+					if (l.size() > 0)
+						messageQueueList.get(0).put(new EmitItem(i, l.toArray(new Serializable[l.size()])));
 				}
-				if (l.size() > 0)
-					messageQueueList.get(0).put(new EmitItem(i, l.toArray(new Serializable[l.size()])));
 			}
 			logger.info("Reload un-finish task ok.");
 		} catch (Exception e) {
@@ -287,7 +290,9 @@ public class Topology {
 			return false;
 		for (int i = 0; i < boltGroupList.get(index).length; i++) {
 			if (!boltGroupList.get(index)[i].isFinish()) {
-				logger.debug("bolt group index [" + index + "]:[" + i + "] is not finish and prevFinish:[" + boltGroupList.get(index)[i].isPrevFinish() + "] and read message queue is empty:[" + boltGroupList.get(index)[i].getReadMessageQueue().isEmpty() + "]");
+				logger.debug("bolt group index [" + index + "]:[" + i + "] is not finish and prevFinish:["
+						+ boltGroupList.get(index)[i].isPrevFinish() + "] and read message queue is empty:["
+						+ boltGroupList.get(index)[i].getReadMessageQueue().isEmpty() + "]");
 				return false;
 			}
 		}
