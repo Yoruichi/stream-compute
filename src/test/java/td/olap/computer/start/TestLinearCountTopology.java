@@ -21,7 +21,7 @@ public class TestLinearCountTopology {
 			@Override
 			public int execute(EmitItem item) {
 				System.out.println(item.getXid());
-				// commit(item.getXid());
+				 commit(item.getXid());
 				return 0;
 			}
 
