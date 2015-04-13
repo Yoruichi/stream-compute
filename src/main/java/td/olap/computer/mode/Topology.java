@@ -55,6 +55,8 @@ public class Topology {
 
 	private DBHandler dbHandler;
 
+	private Object[] parameters;
+
 	public Topology(String name, DBHandler db) {
 		this.name = name;
 		this.dbHandler = db;
@@ -150,11 +152,11 @@ public class Topology {
 	 */
 	public void prepare() throws Exception {
 		for (Spout spout : spoutGroup) {
-			spout.prepare(new Object[] {});
+			spout.prepare(parameters);
 		}
 		for (Bolt[] group : boltGroupList)
 			for (Bolt bolt : group)
-				bolt.prepare(new Object[] {});
+				bolt.prepare(parameters);
 	}
 
 	/**
@@ -392,6 +394,14 @@ public class Topology {
 
 	public void setDbHandler(DBHandler dbHandler) {
 		this.dbHandler = dbHandler;
+	}
+
+	public Object[] getParameters() {
+		return parameters;
+	}
+
+	public void setParameters(Object[] parameters) {
+		this.parameters = parameters;
 	}
 
 }
