@@ -2,9 +2,9 @@ package td.olap.computer.persist;
 
 public abstract class DBHandler {
 
-	public abstract void open();
+	public abstract void open() throws Exception;
 	
-	public abstract void close();
+	public abstract void close() throws Exception;
 	
 	public abstract void setKey(String key, String value);
 	
