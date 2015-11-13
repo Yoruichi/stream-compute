@@ -113,7 +113,7 @@ public abstract class Spout implements Runnable, Cloneable {
                     + " .Maybe blocking.");
             setCurrentXid(XidManager.getAndAddAndSave(dbHandler, topologyName, 1));
             getSendMessageQueue().put(item);
-            setPackageId(0);
+            this.packageId = 0;
         } catch (Exception e) {
             logger.error("Persist messages from topology " + topologyName + " failed. xid " + currentXid + " messages "
                     + Arrays.toString(messages) + ".", e);
@@ -170,14 +170,6 @@ public abstract class Spout implements Runnable, Cloneable {
 
     public void setCurrentXid(long currentXid) {
         this.currentXid = currentXid;
-    }
-
-    public int getPackageId() {
-        return packageId;
-    }
-
-    public void setPackageId(int packageId) {
-        this.packageId = packageId;
     }
 
     public DBHandler getDbHandler() {

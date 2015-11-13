@@ -1,14 +1,13 @@
 package td.olap.computer.mode;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import td.olap.computer.data.EmitItem;
+import td.olap.computer.persist.DBHandler;
+
 import java.io.Serializable;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import td.olap.computer.data.EmitItem;
-import td.olap.computer.persist.DBHandler;
 
 /**
  * @author yoruichi

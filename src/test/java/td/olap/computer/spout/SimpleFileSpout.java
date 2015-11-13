@@ -77,7 +77,11 @@ public class SimpleFileSpout extends Spout {
 	public static void main(String[] args) {
 		SimpleFileSpout sfs = new SimpleFileSpout();
 		sfs.path = "/Users/apple/Documents/active.log";
-		sfs.initializedForTest().execute();
-	}
+        try {
+            sfs.initializedForTest().execute();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
 }

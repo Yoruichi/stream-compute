@@ -32,7 +32,11 @@ public class SimpleStdinSpout extends Spout {
 
 	public static void main(String[] args) {
 		SimpleStdinSpout sss = new SimpleStdinSpout();
-		sss.initializedForTest(new RedisDBHandler()).execute();
-	}
+        try {
+            sss.initializedForTest(new RedisDBHandler()).execute();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
 }

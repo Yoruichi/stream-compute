@@ -164,7 +164,7 @@ public class Topology {
     }
 
     /**
-     * Reload the missing task last running.
+     * Reload the missing task last running and make sure the bucket valid.
      */
     public void reload() {
         try {
