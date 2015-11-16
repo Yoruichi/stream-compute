@@ -9,33 +9,36 @@ import td.olap.computer.spout.SimpleWordSpout;
 
 public class TestLinearCountTopology {
 
-	public static void main(String[] args) {
-		final Topology topo = new Topology("LinearCountTopology",new RedisDBHandler());
-		topo.setMaxMissing(100);
-		topo.setSpout(new SimpleWordSpout(), 3).setBolt(new Bolt() {
+    public static void main(String[] args) {
+        final Topology topo = new Topology("LinearCountTopology", new RedisDBHandler());
+        topo.setMaxMissing(100);
+        topo.setSpout(new SimpleWordSpout(1000), 3).setBolt(new Bolt() {
 
-			@Override
-			public void prepare(Object... parameters) throws Exception {
-			}
+            private int sum = 0;
 
-			@Override
-			public int execute(EmitItem item) {
-				System.out.println(item.getXid());
-				 commit(item.getXid());
-				return 0;
-			}
+            @Override
+            public void prepare(Object... parameters) throws Exception {
+            }
 
-			@Override
-			public void shutdown() {
-			}
-		}, 1);
-		try {
-			topo.prepare();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		topo.reload();
-		topo.start();
-	}
+            @Override
+            public int execute(EmitItem item) {
+                sum++;
+                System.out.println("Get message with xid [" + item.getXid() + "] length [" + item.getMessage().length + "] and sum number >>> " + sum);
+                commit(item.getXid());
+                return 0;
+            }
+
+            @Override
+            public void shutdown() {
+            }
+        }, 1);
+        try {
+            topo.prepare();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        topo.reload();
+        topo.start();
+    }
 
 }

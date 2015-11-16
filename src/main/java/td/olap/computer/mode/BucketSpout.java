@@ -12,14 +12,20 @@ import java.util.concurrent.LinkedBlockingDeque;
  * Created by apple on 15/11/12.
  */
 public abstract class BucketSpout extends Spout {
-//TODO test
+    //TODO test
     private final BlockingQueue<Serializable> queue;
 
     private Thread t;
 
     private boolean running;
 
-    private Thread createThread(final int bucketSize, final int waitSec) {
+    private int bucketSize;
+
+    private int curSize;
+
+    private int waitSec;
+
+    private Thread createThread() {
         return new Thread(new Runnable() {
             private long start = System.currentTimeMillis();
             private List<Serializable> list = new ArrayList<Serializable>();
@@ -44,11 +50,13 @@ public abstract class BucketSpout extends Spout {
                             e.printStackTrace();
                         }
                     }
-                    if (this.list.size() >= bucketSize || (this.list.size() > 0 &&
-                            (System.currentTimeMillis() - this.start) >= waitSec * 1000)) {
-                        emit(this.list.toArray(new Serializable[this.list.size()]));
+                    if (this.list.size() >= bucketSize ||
+                            (System.currentTimeMillis() - this.start) >= waitSec * 1000) {
+                        if (this.list.size() > 0)
+                            emit(this.list.toArray(new Serializable[this.list.size()]));
                         this.list = new ArrayList<Serializable>();
                         this.start = System.currentTimeMillis();
+                        curSize = 0;
                     }
                 }
             }
@@ -67,7 +75,10 @@ public abstract class BucketSpout extends Spout {
      */
     public BucketSpout(final int bucketSize, final int waitSec) {
         this.queue = new LinkedBlockingDeque<Serializable>(bucketSize);
-        this.t = createThread(bucketSize, waitSec);
+        this.bucketSize = bucketSize;
+        this.curSize = 0;
+        this.waitSec = waitSec;
+        this.t = createThread();
         this.t.start();
     }
 
@@ -76,9 +87,13 @@ public abstract class BucketSpout extends Spout {
     }
 
     public void bucket(Serializable msg) {
+        curSize++;
         this.persist(msg);
         try {
             this.queue.put(msg);
+            while (curSize >= bucketSize) {
+                Thread.sleep(waitSec * 10);
+            }
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

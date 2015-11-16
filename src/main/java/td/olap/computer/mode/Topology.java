@@ -77,6 +77,7 @@ public class Topology {
         try {
             if (this.dbHandler != null) {
                 this.getDbHandler().open();
+                logger.info("DB handler[" + this.getDbHandler().getClass().getName() + "] open succeed.");
             }
         } catch (Exception e) {
             throw new RuntimeException(
