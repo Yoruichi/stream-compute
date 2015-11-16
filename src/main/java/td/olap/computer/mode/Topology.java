@@ -1,23 +1,21 @@
 package td.olap.computer.mode;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import td.olap.computer.consist.XidManager;
+import td.olap.computer.data.EmitItem;
+import td.olap.computer.persist.DBHandler;
+import td.olap.computer.util.Util;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import td.olap.computer.consist.XidManager;
-import td.olap.computer.data.EmitItem;
-import td.olap.computer.persist.DBHandler;
-import td.olap.computer.persist.LevelDBHandler;
-import td.olap.computer.persist.RedisDBHandler;
-import td.olap.computer.util.Util;
 
 /**
  * @author yoruichi
@@ -169,23 +167,30 @@ public class Topology {
      */
     public void reload() {
         try {
+            Set<String> notCommitXidSet = this.dbHandler.hGetFields(name);
             String sLastSucc = getDbHandler().getStringValue(name + ":lastsucc");
             long lastSucc = sLastSucc == null ? -1 : Long.valueOf(sLastSucc);
             logger.info("Last success xid is " + lastSucc + ", now ready to load un-finish task.");
-            long reloadSize = XidManager.getCurrent(dbHandler, name);
-            if (reloadSize > 0) {
-                for (long i = (lastSucc + 1); i < reloadSize; i++) {
-                    String sPackageId = getDbHandler().getStringValue(name + ":" + i);
+//            long reloadSize = XidManager.getCurrent(dbHandler, name);
+//            if (reloadSize > 0) {
+            if (notCommitXidSet != null && notCommitXidSet.size() > 0) {
+//                for (long i = (lastSucc + 1); i < reloadSize; i++) {
+                for (String xid : notCommitXidSet) {
+//                    String sPackageId = getDbHandler().hGetStringValue(name + ":" + i);
+                    String sPackageId = getDbHandler().hGetStringValue(name, xid);
                     int packageId = sPackageId == null ? -1 : Integer.valueOf(sPackageId);
-                    logger.info("Reload the Xid " + i + " package 0 to " + packageId + ".");
+//                    logger.info("Reload the Xid " + i + " package 0 to " + packageId + ".");
+                    logger.info("Reload the Xid " + xid + " package 0 to " + packageId + ".");
                     List<Serializable> l = new ArrayList<Serializable>();
                     for (int j = 0; j <= packageId; j++) {
-                        Serializable s = Util.ByteToObject(getDbHandler().getByteWiseValue(name + ":" + i + ":" + j));
+//                        Serializable s = Util.ByteToObject(getDbHandler().getByteWiseValue(name + ":" + i + ":" + j));
+                        Serializable s = Util.ByteToObject(getDbHandler().getByteWiseValue(name + ":" + xid + ":" + j));
                         if (s != null)
                             l.add(s);
                     }
                     if (l.size() > 0)
-                        messageQueueList.get(0).put(new EmitItem(i, l.toArray(new Serializable[l.size()])));
+//                        messageQueueList.get(0).put(new EmitItem(i, l.toArray(new Serializable[l.size()])));
+                        messageQueueList.get(0).put(new EmitItem(Long.parseLong(xid), l.toArray(new Serializable[l.size()])));
                 }
             }
             logger.info("Reload un-finish task ok.");

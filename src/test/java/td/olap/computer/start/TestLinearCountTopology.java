@@ -12,7 +12,7 @@ public class TestLinearCountTopology {
     public static void main(String[] args) {
         final Topology topo = new Topology("LinearCountTopology", new RedisDBHandler());
         topo.setMaxMissing(100);
-        topo.setSpout(new SimpleWordSpout(1000), 3).setBolt(new Bolt() {
+        topo.setSpout(new SimpleWordSpout(10000), 3).setBolt(new Bolt() {
 
             private int sum = 0;
 
@@ -31,7 +31,7 @@ public class TestLinearCountTopology {
             @Override
             public void shutdown() {
             }
-        }, 1);
+        }, 3);
         try {
             topo.prepare();
         } catch (Exception e) {

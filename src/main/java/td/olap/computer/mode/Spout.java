@@ -1,20 +1,18 @@
 package td.olap.computer.mode;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import td.olap.computer.consist.XidManager;
+import td.olap.computer.data.EmitItem;
+import td.olap.computer.persist.DBHandler;
+import td.olap.computer.persist.RedisDBHandler;
+import td.olap.computer.util.Util;
+
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import td.olap.computer.consist.XidManager;
-import td.olap.computer.data.EmitItem;
-import td.olap.computer.persist.DBHandler;
-import td.olap.computer.persist.LevelDBHandler;
-import td.olap.computer.persist.RedisDBHandler;
-import td.olap.computer.util.Util;
 
 /**
  * @author yoruichi
@@ -87,7 +85,8 @@ public abstract class Spout implements Runnable, Cloneable {
         }
         try {
             getDbHandler().setKey(topologyName + ":" + currentXid + ":" + packageId, Util.ObjectToByte(message));
-            getDbHandler().setKey(topologyName + ":" + currentXid, "" + packageId);
+//            getDbHandler().setKey(topologyName + ":" + currentXid, "" + packageId);
+            this.dbHandler.hSetKey(topologyName, "" + currentXid, "" + packageId);
             packageId++;
         } catch (Exception e) {
             logger.error("Persist messages from topology " + topologyName + " failed. xid " + currentXid + "_"
