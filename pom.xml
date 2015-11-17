@@ -6,18 +6,6 @@
 	<version>0.0.4-SNAPSHOT</version>
 
 	<dependencies>
-		<!--<dependency>-->
-			<!--<groupId>org.codehaus.jsr166-mirror</groupId>-->
-			<!--<artifactId>jsr166y</artifactId>-->
-			<!--<version>1.7.0</version>-->
-			<!--<type>jar</type>-->
-			<!--<scope>compile</scope>-->
-		<!--</dependency>-->
-		<dependency>
-			<groupId>org.fusesource.leveldbjni</groupId>
-			<artifactId>leveldbjni-all</artifactId>
-			<version>1.8</version>
-		</dependency>
 		<dependency>
 			<groupId>redis.clients</groupId>
 			<artifactId>jedis</artifactId>
