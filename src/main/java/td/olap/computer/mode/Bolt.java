@@ -110,14 +110,11 @@ public abstract class Bolt implements Runnable, Cloneable {
             return;
         }
         try {
-//            getDbHandler().setKey(topologyName + ":lastsucc", "" + xid);
             String pid = getDbHandler().hGetStringValue(topologyName, "" + xid);
             long packageId = pid == null ? -1 : Long.valueOf(pid);
             for (int i = 0; i <= packageId; i++) {
                 getDbHandler().delKey(topologyName + ":" + xid + ":" + i);
             }
-            // del xid from db
-//            getDbHandler().delKey(topologyName + ":" + xid);
             this.dbHandler.hDelField(topologyName, "" + xid);
         } catch (Exception e) {
             logger.error("Commit message from topology " + topologyName + " failed. Xid " + xid + ".", e);

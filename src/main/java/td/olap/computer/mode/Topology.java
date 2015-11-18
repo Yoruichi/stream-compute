@@ -81,7 +81,8 @@ public class Topology {
             throw new RuntimeException(
                     "Error when open db handler", e);
         }
-        XidManager.registTopology(getDbHandler(), name);
+        if (this.dbHandler != null)
+            XidManager.registTopology(getDbHandler(), name);
     }
 
     /**
@@ -166,6 +167,10 @@ public class Topology {
      * Reload the missing task last running and make sure the bucket valid.
      */
     public void reload() {
+        if (this.dbHandler == null) {
+            logger.warn("Topology %s is not set DB to persist data.If you need,please check.");
+            return;
+        }
         try {
             Set<String> notCommitXidSet = this.dbHandler.hGetFields(name);
             String sLastSucc = getDbHandler().getStringValue(name + ":lastsucc");

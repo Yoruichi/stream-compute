@@ -12,7 +12,7 @@ import java.util.concurrent.LinkedBlockingDeque;
  * Created by apple on 15/11/12.
  */
 public abstract class BucketSpout extends Spout {
-    //TODO test
+
     private final BlockingQueue<Serializable> queue;
 
     private Thread t;
@@ -92,7 +92,7 @@ public abstract class BucketSpout extends Spout {
         try {
             this.queue.put(msg);
             while (curSize >= bucketSize) {
-                Thread.sleep(waitSec * 10);
+                Thread.sleep(10);
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
