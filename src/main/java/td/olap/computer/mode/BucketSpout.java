@@ -1,7 +1,5 @@
 package td.olap.computer.mode;
 
-import td.olap.computer.mode.Spout;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,18 +40,13 @@ public abstract class BucketSpout extends Spout {
                             running = false;
                             e.printStackTrace();
                         }
-                    } else {
-                        try {
-                            Thread.sleep(waitSec * 1000 / 4);
-                        } catch (InterruptedException e) {
-                            running = false;
-                            e.printStackTrace();
-                        }
                     }
                     if (this.list.size() >= bucketSize ||
                             (System.currentTimeMillis() - this.start) >= waitSec * 1000) {
-                        if (this.list.size() > 0)
+                        if (this.list.size() > 0) {
                             emit(this.list.toArray(new Serializable[this.list.size()]));
+                            logger.info("Emit %d messages in one bucket use time %d ms.", list.size(), (System.currentTimeMillis() - this.start));
+                        }
                         this.list = new ArrayList<Serializable>();
                         this.start = System.currentTimeMillis();
                         curSize = 0;
