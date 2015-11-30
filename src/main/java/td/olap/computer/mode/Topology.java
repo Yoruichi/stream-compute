@@ -165,6 +165,7 @@ public class Topology {
 
     /**
      * Reload the missing task last running and make sure the bucket valid.
+     * Note: Now you do NOT need to call this method before the topology start
      */
     public void reload() {
         if (this.dbHandler == null) {
@@ -217,6 +218,11 @@ public class Topology {
      * spout and bolt finished.<br>
      */
     public void start() {
+        new Thread(new Runnable() {
+            public void run() {
+                reload();
+            }
+        }).start();
         if (!running.getAndSet(true)) {
             for (int i = 0; i < spoutGroup.length; i++) {
                 if (spoutGroup[i] != null)
