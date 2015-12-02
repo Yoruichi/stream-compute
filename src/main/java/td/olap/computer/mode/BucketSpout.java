@@ -45,7 +45,7 @@ public abstract class BucketSpout extends Spout {
                             (System.currentTimeMillis() - this.start) >= waitSec * 1000) {
                         if (this.list.size() > 0) {
                             emit(this.list.toArray(new Serializable[this.list.size()]));
-                            logger.info("Emit %d messages in one bucket use time %d ms.", list.size(), (System.currentTimeMillis() - this.start));
+                            logger.info("Emit {} messages in one bucket use time {} ms.", list.size(), (System.currentTimeMillis() - this.start));
                         }
                         this.list = new ArrayList<Serializable>();
                         this.start = System.currentTimeMillis();
