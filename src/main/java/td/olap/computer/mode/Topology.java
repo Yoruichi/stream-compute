@@ -21,13 +21,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author yoruichi
  *         <p/>
  *         Topology is a structure of spouts and bolts with some queue.<br>
- *         Topology has an array of spout,and has an execute service.all of
- *         spouts will be called by the service.<br>
- *         All of the bolts will put in a List with multi level,and every level
- *         is an array of bolt.And for every level bolt array,there is an
- *         execute service.<br>
- *         In addition,is a list of BlockingQueue.To connect spout and bolt or
- *         bolt and bolt.<br>
+ *         Topology has an array of spout,and has an execute service.all of spouts will be called by
+ *         the service.<br>
+ *         All of the bolts will put in a List with multi level,and every level is an array of
+ *         bolt.And for every level bolt array,there is an execute service.<br>
+ *         In addition,is a list of BlockingQueue.To connect spout and bolt or bolt and bolt.<br>
  */
 public class Topology {
     protected final static Logger logger = LoggerFactory.getLogger(Topology.class);
@@ -75,11 +73,11 @@ public class Topology {
         try {
             if (this.dbHandler != null) {
                 this.getDbHandler().open();
-                logger.info("DB handler[" + this.getDbHandler().getClass().getName() + "] open succeed.");
+                logger.info("DB handler[" + this.getDbHandler().getClass().getName()
+                        + "] open succeed.");
             }
         } catch (Exception e) {
-            throw new RuntimeException(
-                    "Error when open db handler", e);
+            throw new RuntimeException("Error when open db handler", e);
         }
         if (this.dbHandler != null)
             XidManager.registTopology(getDbHandler(), name);
@@ -111,7 +109,8 @@ public class Topology {
         }
         spoutGroup[0].setDbHandler(getDbHandler());
         spoutGroup[0].setCurrentXid(XidManager.getAndAdd(name, 1));
-        XidManager.setSpoutSize(dbHandler, name, spoutNum);
+        if (this.getDbHandler() != null)
+            XidManager.setSpoutSize(dbHandler, name, spoutNum);
         return this;
     }
 
@@ -147,10 +146,8 @@ public class Topology {
 
     /**
      * To prepare this topology before it running.<br>
-     * If you have some parameters to initialized,you should rewrite this
-     * method.<br>
-     * Note it,you need to call every spout's prepare method and bolt's prepare
-     * method.
+     * If you have some parameters to initialized,you should rewrite this method.<br>
+     * Note it,you need to call every spout's prepare method and bolt's prepare method.
      *
      * @throws Exception
      */
@@ -164,8 +161,8 @@ public class Topology {
     }
 
     /**
-     * Reload the missing task last running and make sure the bucket valid.
-     * Note: Now you do NOT need to call this method before the topology start
+     * Reload the missing task last running and make sure the bucket valid. Note: Now you do NOT
+     * need to call this method before the topology start
      */
     public void reload() {
         if (this.dbHandler == null) {
@@ -177,26 +174,30 @@ public class Topology {
             String sLastSucc = getDbHandler().getStringValue(name + ":lastsucc");
             long lastSucc = sLastSucc == null ? -1 : Long.valueOf(sLastSucc);
             logger.info("Last success xid is " + lastSucc + ", now ready to load un-finish task.");
-//            long reloadSize = XidManager.getCurrent(dbHandler, name);
-//            if (reloadSize > 0) {
+            // long reloadSize = XidManager.getCurrent(dbHandler, name);
+            // if (reloadSize > 0) {
             if (notCommitXidSet != null && notCommitXidSet.size() > 0) {
-//                for (long i = (lastSucc + 1); i < reloadSize; i++) {
+                // for (long i = (lastSucc + 1); i < reloadSize; i++) {
                 for (String xid : notCommitXidSet) {
-//                    String sPackageId = getDbHandler().hGetStringValue(name + ":" + i);
+                    // String sPackageId = getDbHandler().hGetStringValue(name + ":" + i);
                     String sPackageId = getDbHandler().hGetStringValue(name, xid);
                     int packageId = sPackageId == null ? -1 : Integer.valueOf(sPackageId);
-//                    logger.info("Reload the Xid " + i + " package 0 to " + packageId + ".");
+                    // logger.info("Reload the Xid " + i + " package 0 to " + packageId + ".");
                     logger.info("Reload the Xid " + xid + " package 0 to " + packageId + ".");
                     List<Serializable> l = new ArrayList<Serializable>();
                     for (int j = 0; j <= packageId; j++) {
-//                        Serializable s = Util.ByteToObject(getDbHandler().getByteWiseValue(name + ":" + i + ":" + j));
-                        Serializable s = Util.ByteToObject(getDbHandler().getByteWiseValue(name + ":" + xid + ":" + j));
+                        // Serializable s = Util.ByteToObject(getDbHandler().getByteWiseValue(name +
+                        // ":" + i + ":" + j));
+                        Serializable s = Util.ByteToObject(
+                                getDbHandler().getByteWiseValue(name + ":" + xid + ":" + j));
                         if (s != null)
                             l.add(s);
                     }
                     if (l.size() > 0)
-//                        messageQueueList.get(0).put(new EmitItem(i, l.toArray(new Serializable[l.size()])));
-                        messageQueueList.get(0).put(new EmitItem(Long.parseLong(xid), l.toArray(new Serializable[l.size()])));
+                        // messageQueueList.get(0).put(new EmitItem(i, l.toArray(new
+                        // Serializable[l.size()])));
+                        messageQueueList.get(0).put(new EmitItem(Long.parseLong(xid),
+                                l.toArray(new Serializable[l.size()])));
                 }
             }
             logger.info("Reload un-finish task ok.");
@@ -208,14 +209,12 @@ public class Topology {
 
     /**
      * Topology will be running.<br>
-     * If this instance has already been running,there will be a message to tell
-     * you in log file.<br>
-     * When it running,will set every spout and bolt to NOT finish status.And
-     * set every bolt's previous bolt NOT finish.If some one is NULL, will log
-     * an clone error.<br>
-     * And then,spout service and bolt service will submit every spout and bolt
-     * in a new thread.This topology will sleep wait-time u given until every
-     * spout and bolt finished.<br>
+     * If this instance has already been running,there will be a message to tell you in log
+     * file.<br>
+     * When it running,will set every spout and bolt to NOT finish status.And set every bolt's
+     * previous bolt NOT finish.If some one is NULL, will log an clone error.<br>
+     * And then,spout service and bolt service will submit every spout and bolt in a new thread.This
+     * topology will sleep wait-time u given until every spout and bolt finished.<br>
      */
     public void start() {
         new Thread(new Runnable() {
@@ -280,8 +279,8 @@ public class Topology {
     }
 
     /**
-     * When every spout finished,we call spout finish in topology.And set the
-     * the every bolt previous finish in the head of bolt list.
+     * When every spout finished,we call spout finish in topology.And set the the every bolt
+     * previous finish in the head of bolt list.
      *
      * @return
      */
@@ -302,8 +301,8 @@ public class Topology {
     }
 
     /**
-     * When every bolt in the INDEX given level of bolt list has been
-     * finished,we call bolt finished in topology.
+     * When every bolt in the INDEX given level of bolt list has been finished,we call bolt finished
+     * in topology.
      *
      * @param index
      * @return
@@ -313,8 +312,10 @@ public class Topology {
             return false;
         for (int i = 0; i < boltGroupList.get(index).length; i++) {
             if (!boltGroupList.get(index)[i].isFinish()) {
-                logger.debug("bolt group index [" + index + "]:[" + i + "] is not finish and prevFinish:["
-                        + boltGroupList.get(index)[i].isPrevFinish() + "] and read message queue is empty:["
+                logger.debug("bolt group index [" + index + "]:[" + i
+                        + "] is not finish and prevFinish:["
+                        + boltGroupList.get(index)[i].isPrevFinish()
+                        + "] and read message queue is empty:["
                         + boltGroupList.get(index)[i].getReadMessageQueue().isEmpty() + "]");
                 return false;
             }
