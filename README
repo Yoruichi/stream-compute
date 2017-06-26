@@ -1,5 +1,5 @@
 多线程流式计算模型
-http://wiki.tenddata.com/pages/viewpage.action?pageId=7143677
+
 现在的Count引擎使用的一个框架。非常轻量级。全部使用了JDK自带的线程池和队列做实现。使用起来也相当方便。
 
 一、QuickStart
